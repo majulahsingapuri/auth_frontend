@@ -26,3 +26,14 @@ export async function signIn(args: types.AuthProviders) {
             return passwordSignIn(args.params);
     }
 }
+
+export async function passwordSignUp(params:types.PasswordSignUpParams) {
+    return instance.post<types.UserResponse>(`/api/v1/users`, params);
+}
+
+export async function signUp(args: types.SignUpProviders) {
+    switch (args.provider) {
+        case "password":
+            return passwordSignUp(args.params);
+    }
+}
