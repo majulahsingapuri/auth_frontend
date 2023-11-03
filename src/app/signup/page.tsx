@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Formik, Form, Field, ErrorMessage, FormikErrors } from 'formik';
 import * as types from "../../../api/types";
 import * as api from "../../../api/index";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface FormLayout {
   type: string;
@@ -47,6 +48,9 @@ export default function Login() {
       placeholder: "•••••"
     },
   ]
+  const searchParams = useSearchParams()
+  const next = searchParams.get("referrer")
+  const router = useRouter()
 
   return (
     <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto min-h-screen max-h-max">
@@ -83,7 +87,7 @@ export default function Login() {
                     })
                     .then(() => {
                       setSubmitting(false);
-                      window.location.href = "https://app.local.localhost"
+                      router.push(next ? decodeURI(next) : "/account")
                     })
                 })
             }}

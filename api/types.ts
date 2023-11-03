@@ -7,6 +7,10 @@ export interface UserResponse {
     lastName: string;
 }
 
+export interface UserDoesNotExistResponse {
+    detail: string;
+}
+
 export interface ObtainPairResponse {
     username: string;
     access: string;
@@ -17,6 +21,10 @@ export interface RefreshPairResponse {
     access: string;
     refresh: string;
 };
+
+export interface RefreshPairParams {
+    refresh: string;
+}
 
 export type PasswordSignUpProvider = {
     provider: "password";

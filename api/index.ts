@@ -1,10 +1,17 @@
-import axios from "axios";
+import axios, { InternalAxiosRequestConfig } from "axios";
 import * as types from "./types";
+import { getCookie } from "../helpers"
 
 export const instance = axios.create({
     xsrfCookieName: "csrftoken",
     xsrfHeaderName: "x-csrftoken",
+    withCredentials: true,
 });
+
+instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+    config.headers.Authorization = getCookie("access") ? `Bearer ${getCookie("access")}` : undefined
+    return config
+})
 
 export const getter = (path: string) =>
     instance.get(path).then((res) => res.data);
@@ -27,6 +34,10 @@ export async function signIn(args: types.AuthProviders) {
     }
 }
 
+export async function refreshToken(params: types.RefreshPairParams) {
+    return instance.post<types.RefreshPairResponse>(`/api/v1/token/refresh`, params)
+}
+
 export async function passwordSignUp(params:types.PasswordSignUpParams) {
     return instance.post<types.UserResponse>(`/api/v1/users`, params);
 }
@@ -36,4 +47,8 @@ export async function signUp(args: types.SignUpProviders) {
         case "password":
             return passwordSignUp(args.params);
     }
+}
+
+export async function getMe() {
+    return instance.get<types.UserResponse>(`/api/v1/users/me`)
 }
