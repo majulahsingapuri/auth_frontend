@@ -26,6 +26,11 @@ export interface RefreshPairParams {
     refresh: string;
 }
 
+export interface SignOutParams {
+    access: string;
+    refresh: string;
+}
+
 export type PasswordSignUpProvider = {
     provider: "password";
     params: PasswordSignUpParams;
@@ -55,4 +60,8 @@ export type SignUpProviders = PasswordSignUpProvider
 export interface UpdateUserParams {
     firstName: string;
     lastName: string;
+}
+
+export interface VerifyTokenParams {
+    token: string;
 }

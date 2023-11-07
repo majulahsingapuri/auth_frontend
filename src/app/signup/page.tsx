@@ -5,6 +5,7 @@ import { Formik, Form, Field, ErrorMessage, FormikErrors } from 'formik';
 import * as types from "../../../api/types";
 import * as api from "../../../api/index";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "../../../providers/AuthProvider";
 
 interface FormLayout {
   type: string;
@@ -48,9 +49,12 @@ export default function Login() {
       placeholder: "•••••"
     },
   ]
-  const searchParams = useSearchParams()
-  const next = searchParams.get("referrer")
+  const { authenticated, next, signIn } = useAuth()
   const router = useRouter()
+
+  if (authenticated) {
+    router.push("/account")
+  }
 
   return (
     <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto min-h-screen max-h-max">
@@ -78,16 +82,18 @@ export default function Login() {
               api
                 .signUp({ provider: "password", params: values })
                 .then(() => {
-                  api
-                    .signIn({
+                  signIn({
                       provider: "password", params: {
                         username: values.username,
                         password: values.password1
                       }
-                    })
-                    .then(() => {
+                    },
+                    () => {
                       setSubmitting(false);
                       router.push(next ? decodeURI(next) : "/account")
+                    },
+                    () => {
+                      setSubmitting(false)
                     })
                 })
             }}

@@ -1,6 +1,5 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 import * as types from "./types";
-import { getCookie } from "../helpers"
 
 export const instance = axios.create({
     xsrfCookieName: "csrftoken",
@@ -8,16 +7,11 @@ export const instance = axios.create({
     withCredentials: true,
 });
 
-instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-    config.headers.Authorization = getCookie("access") ? `Bearer ${getCookie("access")}` : undefined
-    return config
-})
-
 export const getter = (path: string) =>
     instance.get(path).then((res) => res.data);
 
-export async function signOut() {
-    return instance.post(`/accounts/logout/`);
+export async function signOut(params: types.SignOutParams) {
+    return instance.post(`/api/v1/token/logout`, params);
 }
 
 export async function passwordSignIn(params: types.PasswordSignInParams) {
@@ -51,4 +45,8 @@ export async function signUp(args: types.SignUpProviders) {
 
 export async function getMe() {
     return instance.get<types.UserResponse>(`/api/v1/users/me`)
+}
+
+export async function verifyToken(params: types.VerifyTokenParams) {
+    return instance.post(`/api/v1/token/verify`, params)
 }

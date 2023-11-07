@@ -1,28 +1,20 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import * as api from "../../../api/index";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../../../providers/AuthProvider";
 
 export default function Account() {
 
+	const { signOut, authenticated, user } = useAuth()
 	const router = useRouter()
 
-	useEffect(() => {
-		api
-			.getMe()
-			.then((res) => {
-				// TODO: Do someting with the data like render account editing info
-				console.log(res.data)
-			})
-			.catch(() => {
-				router.push("/")
-			})
-	})
-
+	if (!authenticated) {
+		router.push("/")
+	}
 	return (
-		<div>
-			Account Page
+		<div className="text-white">
+			Hello {user.username}
+			<button className="rounded-full bg-primary-400 py-1 px-3" type="button" onClick={signOut}>Log out</button>
 		</div>
 	)
 }

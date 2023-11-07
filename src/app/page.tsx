@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as types from "../../api/types";
-import * as api from "../../api/index";
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { getCookie } from "../../helpers";
+import { useState } from "react";
+import { useAuth } from "../../providers/AuthProvider";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
 
@@ -15,34 +14,13 @@ export default function Login() {
     password: ""
   }
 
-  const searchParams = useSearchParams()
-  const [disableInputs, setDisableInputs] = useState<boolean>(true)
-  const [accessCookie, setAccessCookie] = useState<string | null>(getCookie("access"))
+  const [disableInputs, setDisableInputs] = useState<boolean>(false)
+  const { authenticated, signIn, next } = useAuth()
   const router = useRouter()
-  const next = searchParams.get("referrer")
 
-  useEffect(() => {
-    api
-      .getMe()
-      .then(() => {
-        router.push(next ? decodeURI(next) : "/account")
-      })
-      .catch(() => {
-        const refresh = getCookie("refresh")
-        if (refresh) {
-          api
-            .refreshToken({ refresh: refresh })
-            .then((res) => {
-              setAccessCookie(res.data.access)
-              setDisableInputs(false)
-            })
-        }
-        else {
-          setDisableInputs(false);
-        }
-      })
-  }, [accessCookie, next, router])
-
+  if (authenticated) {
+    router.push("/account")
+  }
 
   return (
     <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto h-screen">
@@ -54,14 +32,12 @@ export default function Login() {
           <Formik
             initialValues={initialValues}
             onSubmit={(values, { setSubmitting, setStatus }) => {
-              api
-                .signIn({ provider: "password", params: values })
-                .then(() => {
+              setDisableInputs(true)
+                signIn({ provider: "password", params: values }, () => {
                   setSubmitting(false)
-                  router.push(next ? decodeURI(next) : "/account")
-                })
-                .catch(() => {
+                }, () => {  
                   setSubmitting(false)
+                  setDisableInputs(false)
                   setStatus("Invalid Credentials")
                 })
             }}
