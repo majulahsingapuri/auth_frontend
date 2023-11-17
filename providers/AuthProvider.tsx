@@ -1,11 +1,33 @@
-"use client"
+"use client";
 
-import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useState } from "react";
-import { instance, signIn as doSignIn, signOut as doSignOut, refreshToken as doRefreshToken, getMe, verifyToken } from "../api";
-import { AuthProviders, ObtainPairResponse, RefreshPairResponse, UserResponse } from "../api/types";
+import {
+  PropsWithChildren,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import {
+  instance,
+  signIn as doSignIn,
+  signOut as doSignOut,
+  refreshToken as doRefreshToken,
+  getMe,
+  verifyToken,
+} from "../api";
+import {
+  AuthProviders,
+  ObtainPairResponse,
+  RefreshPairResponse,
+  UserResponse,
+} from "../api/types";
 import axios from "axios";
 
-import { useSearchParams, useRouter } from "next/navigation";
+import {
+  useSearchParams,
+  useRouter,
+} from "next/navigation";
 import { getCookie } from "../helpers";
 
 export interface Credentials {
@@ -14,24 +36,28 @@ export interface Credentials {
 }
 
 export type Session =
-  {
-    state: "loading";
-  }
+  | {
+      state: "loading";
+    }
   | { state: "authenticating" }
   | { state: "unauthenticated" }
   | {
-    state: "authenticated";
-    credentials: Credentials;
-  };
+      state: "authenticated";
+      credentials: Credentials;
+    };
 
-export type User = UserResponse
+export type User = UserResponse;
 
 export interface Auth {
   session: Session;
   user: User;
   next: string | null;
   authenticated: boolean;
-  signIn: (args: AuthProviders, onSuccess: () => void, onFail: () => void) => void;
+  signIn: (
+    args: AuthProviders,
+    onSuccess: () => void,
+    onFail: () => void,
+  ) => void;
   signOut: () => void;
 }
 
@@ -41,77 +67,86 @@ export const AuthContext = createContext<Auth>({
     username: "",
     email: "",
     firstName: "",
-    lastName: ""
+    lastName: "",
   },
   next: null,
   authenticated: false,
-  signIn(): void { },
-  signOut(): void { },
+  signIn(): void {},
+  signOut(): void {},
 });
 
-const AuthProvider = ({ children }: PropsWithChildren<{}>) => {
+const AuthProvider = ({
+  children,
+}: PropsWithChildren<{}>) => {
   const nullUser = {
     username: "",
     email: "",
     firstName: "",
-    lastName: ""
-  }
+    lastName: "",
+  };
   const [session, setSession] = useState<Session>({
     state: "loading",
   });
-  const [next, setNext] = useState<string | null>(null)
-  const [user, setUser] = useState<User>(nullUser)
-  const [authenticated, setAuthenticated] = useState<boolean>(false)
+  const [next, setNext] = useState<string | null>(null);
+  const [user, setUser] = useState<User>(nullUser);
+  const [authenticated, setAuthenticated] =
+    useState<boolean>(false);
 
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams();
 
   const initSession = (auth: ObtainPairResponse) => {
-    const { access, refresh } =
-      auth;
-    instance.defaults.headers.common["authorization"] = `Bearer ${access}`;
+    const { access, refresh } = auth;
+    instance.defaults.headers.common[
+      "authorization"
+    ] = `Bearer ${access}`;
     setSession({
       state: "authenticated",
       credentials: {
         access,
-        refresh
+        refresh,
       },
     });
   };
 
   const refreshSession = (auth: RefreshPairResponse) => {
-    const { access, refresh } =
-      auth;
-    instance.defaults.headers.common["authorization"] = `Bearer ${access}`;
+    const { access, refresh } = auth;
+    instance.defaults.headers.common[
+      "authorization"
+    ] = `Bearer ${access}`;
     setSession({
       state: "authenticated",
       credentials: {
         access,
-        refresh
+        refresh,
       },
     });
   };
 
-
   const clearSession = () => {
     if (session.state === "authenticated")
-      doSignOut({ access: session.credentials.access, refresh: session.credentials.refresh })
-        .then(() => {
-          delete instance.defaults.headers.common["authorization"];
-          setSession({ state: "unauthenticated" });
-          setUser(nullUser)
-        });
+      doSignOut({
+        access: session.credentials.access,
+        refresh: session.credentials.refresh,
+      }).then(() => {
+        delete instance.defaults.headers.common[
+          "authorization"
+        ];
+        setSession({ state: "unauthenticated" });
+        setUser(nullUser);
+      });
   };
 
   const refreshToken = useCallback(async () => {
-    const refresh = getCookie("refresh")
+    const refresh = getCookie("refresh");
     if (refresh) {
-      const authResponse = await doRefreshToken({ refresh: refresh });
+      const authResponse = await doRefreshToken({
+        refresh: refresh,
+      });
       if (authResponse.status === 200) {
         refreshSession(authResponse.data);
-        getMe()
-          .then((res) => {
-            setUser(res.data)
-          })
+        getMe().then((res) => {
+          setUser(res.data);
+        });
       } else {
         setSession({ state: "unauthenticated" });
       }
@@ -125,15 +160,19 @@ const AuthProvider = ({ children }: PropsWithChildren<{}>) => {
     const handle = instance.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (!axios.isCancel(error) && error.response.status === 401) {
+        if (
+          !axios.isCancel(error) &&
+          error.response.status === 401
+        ) {
           setSession({
             state: "unauthenticated",
           });
         }
         return Promise.reject(error);
-      }
+      },
     );
-    return () => instance.interceptors.response.eject(handle);
+    return () =>
+      instance.interceptors.response.eject(handle);
   }, []);
 
   // This second effect runs when the auth state changes.
@@ -144,8 +183,8 @@ const AuthProvider = ({ children }: PropsWithChildren<{}>) => {
     if (session.state !== "loading") {
       return;
     }
-    const access = getCookie("access")
-    const refresh = getCookie("refresh")
+    const access = getCookie("access");
+    const refresh = getCookie("refresh");
     if (access && refresh) {
       instance.defaults.headers.common[
         "authorization"
@@ -153,35 +192,38 @@ const AuthProvider = ({ children }: PropsWithChildren<{}>) => {
       verifyToken({ token: access })
         .then(() => {
           setSession({
-            state: "authenticated", credentials: {
+            state: "authenticated",
+            credentials: {
               access,
-              refresh
-            }
-          })
-          getMe()
-          .then((res) => {
-            setUser(res.data)
-          })
+              refresh,
+            },
+          });
+          getMe().then((res) => {
+            setUser(res.data);
+          });
         })
         .catch(() => {
-          refreshToken()
-        })
+          refreshToken();
+        });
     } else {
-      setSession({ state: "unauthenticated" })
+      setSession({ state: "unauthenticated" });
     }
   }, [session.state, refreshToken]);
 
   useEffect(() => {
-    const referrer = searchParams.get("referrer")
-    setNext(referrer)
-  }, [searchParams])
+    const referrer = searchParams.get("referrer");
+    setNext(referrer);
+  }, [searchParams]);
 
   useEffect(() => {
-    setAuthenticated(session.state === "authenticated")
-  }, [session.state])
+    setAuthenticated(session.state === "authenticated");
+  }, [session.state]);
 
-
-  const signIn = (args: AuthProviders, onSuccess: () => void, onFail: () => void) => {
+  const signIn = (
+    args: AuthProviders,
+    onSuccess: () => void,
+    onFail: () => void,
+  ) => {
     setSession({ state: "authenticating" });
     doSignIn(args)
       .then((authResponse) => {
@@ -193,12 +235,11 @@ const AuthProvider = ({ children }: PropsWithChildren<{}>) => {
       })
       .then(onSuccess)
       .then(() => {
-        getMe()
-          .then((res) => {
-            setUser(res.data)
-          })
+        getMe().then((res) => {
+          setUser(res.data);
+        });
       })
-      .catch(onFail)
+      .catch(onFail);
   };
 
   const signOut = () => {
@@ -214,7 +255,12 @@ const AuthProvider = ({ children }: PropsWithChildren<{}>) => {
     signOut,
   };
 
-  return <AuthContext.Provider value={auth}> {children} </AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={auth}>
+      {" "}
+      {children}{" "}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => useContext(AuthContext);

@@ -1,10 +1,19 @@
-'use client'
+"use client";
 
 import Link from "next/link";
-import { Formik, Form, Field, ErrorMessage, FormikErrors } from 'formik';
+import {
+  Formik,
+  Form,
+  Field,
+  ErrorMessage,
+  FormikErrors,
+} from "formik";
 import * as types from "../../../api/types";
 import * as api from "../../../api/index";
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { useAuth } from "../../../providers/AuthProvider";
 
 interface FormLayout {
@@ -15,45 +24,44 @@ interface FormLayout {
 }
 
 export default function Login() {
-
   const initialValues: types.PasswordSignUpParams = {
     username: "",
     email: "",
     password1: "",
-    password2: ""
-  }
+    password2: "",
+  };
 
   const formFields: FormLayout[] = [
     {
       type: "text",
       id: "username",
       text: "Username",
-      placeholder: "johndoe"
+      placeholder: "johndoe",
     },
     {
       type: "email",
       id: "email",
       text: "Email",
-      placeholder: "johndoe@email.com"
+      placeholder: "johndoe@email.com",
     },
     {
       type: "password",
       id: "password1",
       text: "Password",
-      placeholder: "•••••"
+      placeholder: "•••••",
     },
     {
       type: "password",
       id: "password2",
       text: "Confirm Password",
-      placeholder: "•••••"
+      placeholder: "•••••",
     },
-  ]
-  const { authenticated, next, signIn } = useAuth()
-  const router = useRouter()
+  ];
+  const { authenticated, next, signIn } = useAuth();
+  const router = useRouter();
 
   if (authenticated) {
-    router.push("/account")
+    router.replace("/account");
   }
 
   return (
@@ -65,64 +73,103 @@ export default function Login() {
           </h1>
           <Formik
             initialValues={initialValues}
-            validate={(values: types.PasswordSignUpParams) => {
-              let errors: FormikErrors<types.PasswordSignUpParams> = {}
-              if (values.password2 !== "" && values.password1 !== values.password2) {
-                errors.password2 = "Passwords do not match"
+            validate={(
+              values: types.PasswordSignUpParams,
+            ) => {
+              let errors: FormikErrors<types.PasswordSignUpParams> =
+                {};
+              if (
+                values.password2 !== "" &&
+                values.password1 !== values.password2
+              ) {
+                errors.password2 = "Passwords do not match";
               }
               if (!values.email) {
-                errors.email = "Email is required"
-              } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)){
-                errors.email = "Not a valid email"
+                errors.email = "Email is required";
+              } else if (
+                !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(
+                  values.email,
+                )
+              ) {
+                errors.email = "Not a valid email";
               }
-              return errors
+              return errors;
             }}
             validateOnBlur
             onSubmit={(values, { setSubmitting }) => {
               api
-                .signUp({ provider: "password", params: values })
+                .signUp({
+                  provider: "password",
+                  params: values,
+                })
                 .then(() => {
-                  signIn({
-                      provider: "password", params: {
+                  signIn(
+                    {
+                      provider: "password",
+                      params: {
                         username: values.username,
-                        password: values.password1
-                      }
+                        password: values.password1,
+                      },
                     },
                     () => {
                       setSubmitting(false);
-                      router.push(next ? decodeURI(next) : "/account")
+                      router.replace(
+                        next ? decodeURI(next) : "/account",
+                      );
                     },
                     () => {
-                      setSubmitting(false)
-                    })
-                })
+                      setSubmitting(false);
+                    },
+                  );
+                });
             }}
           >
             {({ isSubmitting }) => (
               <Form className="space-y-6">
                 {formFields.map((field) => (
                   <div key={field.id} className="space-y-4">
-                    <label htmlFor="password2" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    <label
+                      htmlFor="password2"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
                       {field.text}
                     </label>
-                    <Field type={field.type} name={field.id} id={field.id} placeholder={field.placeholder} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required />
-                    <ErrorMessage name={field.id} component={"div"} className="bg-red-700 border border-red-600 text-white text-sm rounded-lg block w-full p-2.5" />
+                    <Field
+                      type={field.type}
+                      name={field.id}
+                      id={field.id}
+                      placeholder={field.placeholder}
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      required
+                    />
+                    <ErrorMessage
+                      name={field.id}
+                      component={"div"}
+                      className="bg-red-700 border border-red-600 text-white text-sm rounded-lg block w-full p-2.5"
+                    />
                   </div>
                 ))}
-                <button type="submit" disabled={isSubmitting} className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                >
                   Sign up
                 </button>
               </Form>
             )}
           </Formik>
           <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-            Have an account? {" "}
-            <Link href={"/"} className="font-medium text-primary-600 hover:underline dark:text-primary-500">
+            Have an account?{" "}
+            <Link
+              href={"/"}
+              className="font-medium text-primary-600 hover:underline dark:text-primary-500"
+            >
               Log In
             </Link>
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }
