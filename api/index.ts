@@ -61,6 +61,10 @@ export async function getMe() {
   );
 }
 
+export async function getCSRF() {
+  return instance.get(`/api/v1/csrf`);
+}
+
 export async function verifyToken(
   params: types.VerifyTokenParams,
 ) {

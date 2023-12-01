@@ -15,6 +15,7 @@ import {
   refreshToken as doRefreshToken,
   getMe,
   verifyToken,
+  getCSRF,
 } from "../api";
 import {
   AuthProviders,
@@ -209,6 +210,12 @@ const AuthProvider = ({
       setSession({ state: "unauthenticated" });
     }
   }, [session.state, refreshToken]);
+
+  // This third effect runs once on start to get
+  // a CSRF token from the server
+  useEffect(() => {
+    getCSRF();
+  }, []);
 
   useEffect(() => {
     const referrer = searchParams.get("referrer");
